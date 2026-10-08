@@ -49,6 +49,7 @@ async def check_query(message: str) -> GuardVerdict:
     try:
         return GuardVerdict.model_validate(json.loads(raw))
     except (json.JSONDecodeError, ValidationError):
+        print('-------we are in expecting error in guard response validation--------')
         return GuardVerdict(
             category="other",
             is_relevant=False,
