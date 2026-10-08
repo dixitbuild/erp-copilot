@@ -4,8 +4,10 @@ from pydantic import BaseModel, Field
 
 from erp_copilot.agents.erp import erp_agent
 from erp_copilot.agents.guard import check_query
+from erp_copilot.routers.orders import router as orders_router
 
 app = FastAPI(title="ERP Copilot")
+app.include_router(orders_router)
 
 IRRELEVANT_MESSAGE = (
     "Please ask a relevant question about sales orders, purchase orders or work orders."
