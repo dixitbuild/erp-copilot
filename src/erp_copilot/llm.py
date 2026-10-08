@@ -48,8 +48,8 @@ async def chat_with_tools(
             temperature=settings.groq_temperature if temperature is None else temperature,
         )
         message = response.choices[0].message
-        print('----------message.tool_calls----------------', message.tool_calls)
-        print('----------message.content----------------', message.content)
+        # print('----------message.tool_calls----------------', message.tool_calls)
+        # print('----------message.content----------------', message.content)
         if not message.tool_calls:
             return message.content or ""
         messages.append(
@@ -66,11 +66,12 @@ async def chat_with_tools(
                 ],
             }
         )
-        print('----------messages----------------', messages)
+        # print('----------messages----------------', messages)
         for call in message.tool_calls:
             try:
                 result = await call_tool(call.function.name, json.loads(call.function.arguments or "{}"))
             except Exception as exc:  # report tool failures to the model instead of crashing
                 result = f"Error: {exc}"
             messages.append({"role": "tool", "tool_call_id": call.id, "content": result})
+        print('----------messages----------------', messages)
     return "Sorry, I could not finish answering within the allowed number of steps."

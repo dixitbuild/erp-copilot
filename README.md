@@ -38,6 +38,7 @@ erp-copilot/
     ├── config.py        # settings from .env
     ├── llm.py           # Groq client and chat_completion()
     ├── api.py           # FastAPI app: /health, /chat
+    ├── ui.py            # Streamlit chat UI (calls the API over HTTP)
     ├── schemas.py       # Pydantic models: SalesOrder, PurchaseOrder, WorkOrder
     ├── dummy_data.py    # sample orders (seeds the database)
     ├── db.py            # SQLite setup + read-only, table-restricted queries
@@ -76,6 +77,18 @@ uv run uvicorn erp_copilot.api:app --reload --port 8000
 ```
 
 Interactive docs: http://localhost:8000/docs
+
+### Chat UI (Streamlit)
+
+With the backend running, start the UI in a second terminal:
+
+```bash
+uv run streamlit run src/erp_copilot/ui.py
+```
+
+Open http://localhost:8501. The sidebar shows backend status and example questions. Blocked
+messages show as warnings and errors as red boxes. To use another backend, change the URL in the
+sidebar or set `ERP_API_URL`.
 
 ## API
 
