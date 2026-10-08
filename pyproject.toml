@@ -1,0 +1,21 @@
+[project]
+name = "erp-copilot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "dixit", email = "dixitbuild@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.142.4",
+    "groq>=1.7.0",
+    "pydantic-settings>=2.15.0",
+]
+
+[project.scripts]
+erp-copilot = "erp_copilot:main"
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
