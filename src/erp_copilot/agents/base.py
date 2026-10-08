@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-from erp_copilot.llm import chat_completion
+from erp_copilot.llm import chat_completion, chat_with_tools
+from erp_copilot.mcp_client import McpToolbox
 
 
 @dataclass
@@ -23,4 +24,17 @@ class Agent:
             model=self.model,
             temperature=self.temperature,
             json_mode=self.json_mode,
+        )
+
+    async def run_with_tools(self, user_input: str, toolbox: McpToolbox) -> str:
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": user_input},
+        ]
+        return await chat_with_tools(
+            messages,
+            tools=toolbox.tools,
+            call_tool=toolbox.call,
+            model=self.model,
+            temperature=self.temperature,
         )

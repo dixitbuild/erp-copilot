@@ -1,12 +1,26 @@
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, HTTPException, Request
 from groq import APIError
 from pydantic import BaseModel, Field
 
-from erp_copilot.agents.erp import erp_agent
+from erp_copilot.agents.erp import build_erp_agent
 from erp_copilot.agents.guard import check_query
+from erp_copilot.mcp_client import McpToolbox
 from erp_copilot.routers.orders import router as orders_router
 
-app = FastAPI(title="ERP Copilot")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    toolbox = McpToolbox("erp_copilot.mcp_servers.db_server")
+    await toolbox.start()
+    app.state.toolbox = toolbox
+    app.state.erp_agent = build_erp_agent()
+    yield
+    await toolbox.stop()
+
+
+app = FastAPI(title="ERP Copilot", lifespan=lifespan)
 app.include_router(orders_router)
 
 IRRELEVANT_MESSAGE = (
@@ -31,14 +45,15 @@ async def health() -> dict[str, str]:
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
+async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
     try:
         verdict = await check_query(request.message)
         if verdict.injection_detected:
             return ChatResponse(agent="guard", blocked=True, reply=INJECTION_MESSAGE)
         if not verdict.is_relevant:
             return ChatResponse(agent="guard", blocked=True, reply=IRRELEVANT_MESSAGE)
-        reply = await erp_agent.run(request.message)
+        erp_agent = http_request.app.state.erp_agent
+        reply = await erp_agent.run_with_tools(request.message, http_request.app.state.toolbox)
     except APIError as exc:
         raise HTTPException(status_code=502, detail=f"Groq API error: {exc}") from exc
     return ChatResponse(agent=erp_agent.name, blocked=False, reply=reply)
