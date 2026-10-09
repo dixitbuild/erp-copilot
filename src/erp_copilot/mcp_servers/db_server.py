@@ -21,7 +21,8 @@ def describe_table(table: str) -> str:
 
 @mcp.tool()
 def run_query(sql: str) -> str:
-    """Run one read-only SQLite SELECT query on the ERP tables. Returns columns and up to 100 rows."""
+    """Run one read-only SQLite SELECT query on the ERP order tables. Use for any question about
+    order data: lookups, counts, totals, filters, comparisons. Returns columns and up to 100 rows."""
     try:
         return json.dumps(db.run_select(sql))
     except ValueError as exc:

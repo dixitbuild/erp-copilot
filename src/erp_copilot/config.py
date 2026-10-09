@@ -14,3 +14,22 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+class PineconeSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    pinecone_api_key: str
+    pinecone_index: str = "erp-knowledge"
+    pinecone_namespace: str = "docs"
+    pinecone_cloud: str = "aws"
+    pinecone_region: str = "us-east-1"
+    pinecone_embed_model: str = "llama-text-embed-v2"
+
+
+def pinecone_configured() -> bool:
+    try:
+        PineconeSettings()
+    except ValueError:
+        return False
+    return True

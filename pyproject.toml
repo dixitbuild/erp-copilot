@@ -11,12 +11,14 @@ dependencies = [
     "fastapi[standard]>=0.142.4",
     "groq>=1.7.0",
     "mcp>=2.3.0",
+    "pinecone>=10.0.0",
     "pydantic-settings>=2.15.0",
     "streamlit>=1.65.0",
 ]
 
 [project.scripts]
 erp-copilot = "erp_copilot:main"
+erp-ingest = "erp_copilot.ingest:main"
 
 [build-system]
 requires = ["uv_build>=0.12.19,<0.13.0"]

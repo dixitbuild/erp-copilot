@@ -17,6 +17,8 @@ flowchart TD
     G -->|relevant and clean| E[ERP agent<br/>agents/erp.py]
     E <-->|tool calls| M[MCP DB server<br/>mcp_servers/db_server.py]
     M --> DB[(SQLite erp.db<br/>read-only)]
+    E <-->|tool calls| K[MCP knowledge server<br/>mcp_servers/knowledge_server.py]
+    K --> PC[(Pinecone<br/>knowledge docs)]
     E --> L[llm.py]
     G -.-> L
     L <--> GQ[(Groq API)]
@@ -33,6 +35,7 @@ The guard fails closed: if its output cannot be parsed, the message is blocked.
 erp-copilot/
 ├── pyproject.toml
 ├── .env.example
+├── knowledge/           # markdown docs indexed into Pinecone
 └── src/erp_copilot/
     ├── __init__.py      # entry point: starts the server
     ├── config.py        # settings from .env
@@ -42,11 +45,14 @@ erp-copilot/
     ├── schemas.py       # Pydantic models: SalesOrder, PurchaseOrder, WorkOrder
     ├── dummy_data.py    # sample orders (seeds the database)
     ├── db.py            # SQLite setup + read-only, table-restricted queries
-    ├── mcp_client.py    # starts an MCP server, exposes its tools to Groq
+    ├── vector_store.py  # Pinecone: chunk, upsert, search (integrated embeddings)
+    ├── ingest.py        # loads knowledge/*.md into Pinecone
+    ├── mcp_client.py    # starts MCP servers, exposes all their tools to Groq
     ├── routers/
     │   └── orders.py    # GET /sales-orders, /purchase-orders, /work-orders
     ├── mcp_servers/
-    │   └── db_server.py # MCP tools: describe_table, run_query
+    │   ├── db_server.py        # MCP tools: describe_table, run_query
+    │   └── knowledge_server.py # MCP tool: search_knowledge
     └── agents/
         ├── base.py      # Agent class (run, run_with_tools)
         ├── guard.py     # relevance + prompt-injection check
@@ -67,6 +73,8 @@ uv sync
 | `GROQ_API_KEY` | required | Groq credentials |
 | `GROQ_MODEL` | `llama-3.3-70b-versatile` | Model used by all agents |
 | `GROQ_TEMPERATURE` | `0.7` | Default temperature (guard uses 0) |
+| `PINECONE_API_KEY` | optional | Enables knowledge search. Without it the agent only has the DB tools |
+| `PINECONE_INDEX` | `erp-knowledge` | Index name (created on first ingest) |
 
 ## Run
 
@@ -141,9 +149,25 @@ data on first start, git-ignored) through an MCP server that the API starts at s
   tables come from `ERP_ALLOWED_TABLES` (default: the three order tables), so a different role can
   be given a smaller set.
 
+## Knowledge search (Pinecone)
+
+Process and policy questions ("who approves a large purchase order?") are answered from the
+markdown files in `knowledge/`, stored in Pinecone and searched by meaning. Pinecone embeds the
+text itself (`llama-text-embed-v2`), so no separate embedding key is needed.
+
+```bash
+# 1. add PINECONE_API_KEY to .env
+uv run erp-ingest        # creates the index if needed and uploads one chunk per "## " section
+uv run erp-copilot       # restart the API so the knowledge server starts
+```
+
+Re-run `erp-ingest` after editing the docs. Tool choice is guided by the tool descriptions and the
+"Tool rules" in the ERP agent prompt: `run_query` for order data, `search_knowledge` for rules and
+processes.
+
 ## Roadmap
 
-- Second MCP server wrapping the order GET endpoints (API data fetch)
+- MCP server wrapping the order GET endpoints (API data fetch)
 - Orchestrator that routes relevant queries to specialist agents (sales, purchase, work orders)
 - Tests with a mocked Groq client
 - Streaming responses
