@@ -7,15 +7,15 @@ from pydantic import BaseModel, Field
 from erp_copilot.agents.erp import build_erp_agent
 from erp_copilot.agents.guard import check_query
 from erp_copilot.config import pinecone_configured
-from erp_copilot.mcp_client import McpToolbox
-from erp_copilot.routers.orders import router as orders_router
+from erp_copilot.tools.client import McpToolbox
+from erp_copilot.api.routers.orders import router as orders_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    modules = ["erp_copilot.mcp_servers.db_server"]
+    modules = ["erp_copilot.tools.db_server"]
     if pinecone_configured():  # knowledge search is optional: skipped until PINECONE_API_KEY is set
-        modules.append("erp_copilot.mcp_servers.knowledge_server")
+        modules.append("erp_copilot.tools.knowledge_server")
     toolbox = McpToolbox(modules)
     await toolbox.start()
     app.state.toolbox = toolbox

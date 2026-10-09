@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from erp_copilot.llm import chat_completion, chat_with_tools
-from erp_copilot.mcp_client import McpToolbox
+from erp_copilot.tools.client import McpToolbox
 
 
 @dataclass

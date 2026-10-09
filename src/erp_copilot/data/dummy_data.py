@@ -1,6 +1,6 @@
 from datetime import date
 
-from erp_copilot.schemas import PurchaseOrder, SalesOrder, WorkOrder
+from erp_copilot.data.schemas import PurchaseOrder, SalesOrder, WorkOrder
 
 SALES_ORDERS = [
     SalesOrder(id="SO-1001", customer="Acme Corp", item="Steel Bracket", quantity=200,

@@ -5,9 +5,9 @@ import re
 import sqlite3
 from pathlib import Path
 
-from erp_copilot.dummy_data import PURCHASE_ORDERS, SALES_ORDERS, WORK_ORDERS
+from erp_copilot.data.dummy_data import PURCHASE_ORDERS, SALES_ORDERS, WORK_ORDERS
 
-DEFAULT_DB_PATH = Path(__file__).resolve().parents[2] / "erp.db"
+DEFAULT_DB_PATH = Path(__file__).resolve().parents[3] / "erp.db"
 DEFAULT_ALLOWED_TABLES = ("sales_orders", "purchase_orders", "work_orders")
 MAX_ROWS = 100
 

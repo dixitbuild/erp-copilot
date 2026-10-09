@@ -9,15 +9,15 @@ Supported topics: **sales orders**, **purchase orders**, **work orders**.
 
 ```mermaid
 flowchart TD
-    U([User]) -->|POST /chat| API[api.py<br/>FastAPI]
+    U([User]) -->|POST /chat| API[api/app.py<br/>FastAPI]
     API --> G{Guard agent<br/>agents/guard.py}
     G -->|injection detected| B1[Blocked:<br/>manipulation message]
     G -->|not about sales / purchase / work orders| B2[Blocked:<br/>ask a relevant question]
     G -->|guard output unusable| B2
     G -->|relevant and clean| E[ERP agent<br/>agents/erp.py]
-    E <-->|tool calls| M[MCP DB server<br/>mcp_servers/db_server.py]
+    E <-->|tool calls| M[MCP DB server<br/>tools/db_server.py]
     M --> DB[(SQLite erp.db<br/>read-only)]
-    E <-->|tool calls| K[MCP knowledge server<br/>mcp_servers/knowledge_server.py]
+    E <-->|tool calls| K[MCP knowledge server<br/>tools/knowledge_server.py]
     K --> PC[(Pinecone<br/>knowledge docs)]
     E --> L[llm.py]
     G -.-> L
@@ -35,31 +35,35 @@ The guard fails closed: if its output cannot be parsed, the message is blocked.
 erp-copilot/
 ├── pyproject.toml
 ├── .env.example
-├── knowledge/           # markdown docs indexed into Pinecone
+├── knowledge/                 # markdown docs indexed into Pinecone
 └── src/erp_copilot/
-    ├── __init__.py      # entry point: starts the server
-    ├── config.py        # settings from .env
-    ├── llm.py           # Groq client and chat_completion()
-    ├── api.py           # FastAPI app: /health, /chat
-    ├── ui.py            # Streamlit chat UI (calls the API over HTTP)
-    ├── schemas.py       # Pydantic models: SalesOrder, PurchaseOrder, WorkOrder
-    ├── dummy_data.py    # sample orders (seeds the database)
-    ├── db.py            # SQLite setup + read-only, table-restricted queries
-    ├── vector_store.py  # Pinecone: chunk, upsert, search (integrated embeddings)
-    ├── ingest.py        # loads knowledge/*.md into Pinecone
-    ├── mcp_client.py    # starts MCP servers, exposes all their tools to Groq
-    ├── routers/
-    │   └── orders.py    # GET /sales-orders, /purchase-orders, /work-orders
-    ├── mcp_servers/
-    │   ├── db_server.py        # MCP tools: describe_table, run_query
-    │   └── knowledge_server.py # MCP tool: search_knowledge
-    └── agents/
-        ├── base.py      # Agent class (run, run_with_tools)
-        ├── guard.py     # relevance + prompt-injection check
-        └── erp.py       # ERP agent: schema summary prompt + DB tools
+    ├── __init__.py            # entry point: starts the server
+    ├── config.py              # settings from .env (shared)
+    ├── llm.py                 # Groq client + tool-calling loop (shared)
+    ├── api/                   # HTTP layer
+    │   ├── app.py             # FastAPI app: /health, /chat, startup (lifespan)
+    │   └── routers/
+    │       └── orders.py      # GET /sales-orders, /purchase-orders, /work-orders
+    ├── agents/                # the LLM agents
+    │   ├── base.py            # Agent class (run, run_with_tools)
+    │   ├── guard.py           # relevance + prompt-injection check
+    │   └── erp.py             # ERP agent: schema summary prompt + tool rules
+    ├── tools/                 # MCP: servers the agent can call, and the client that runs them
+    │   ├── client.py          # starts MCP servers, exposes their tools to Groq
+    │   ├── db_server.py       # tools: describe_table, run_query
+    │   └── knowledge_server.py# tool: search_knowledge
+    ├── data/                  # database and sample data
+    │   ├── db.py              # SQLite setup + read-only, table-restricted queries
+    │   ├── schemas.py         # Pydantic models: SalesOrder, PurchaseOrder, WorkOrder
+    │   └── dummy_data.py      # sample orders (seeds the database)
+    ├── vector/                # Pinecone knowledge store
+    │   ├── store.py           # chunk, upsert, search (integrated embeddings)
+    │   └── ingest.py          # loads knowledge/*.md into Pinecone
+    └── ui/
+        └── app.py             # Streamlit chat UI (calls the API over HTTP)
 ```
 
-Layers: `api.py` → `agents/` → `llm.py` → Groq. `config.py` is used by all.
+Layers: `api/` → `agents/` → `llm.py` → Groq, with `tools/` giving agents access to `data/` and `vector/`. `config.py` is used by all.
 
 ## Setup
 
@@ -81,7 +85,7 @@ uv sync
 ```bash
 uv run erp-copilot
 # or
-uv run uvicorn erp_copilot.api:app --reload --port 8000
+uv run uvicorn erp_copilot.api.app:app --reload --port 8000
 ```
 
 Interactive docs: http://localhost:8000/docs
@@ -91,7 +95,7 @@ Interactive docs: http://localhost:8000/docs
 With the backend running, start the UI in a second terminal:
 
 ```bash
-uv run streamlit run src/erp_copilot/ui.py
+uv run streamlit run src/erp_copilot/ui/app.py
 ```
 
 Open http://localhost:8501. The sidebar shows backend status and example questions. Blocked

@@ -5,7 +5,7 @@ import json
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
-from erp_copilot import vector_store
+from erp_copilot.vector import store as vector_store
 from erp_copilot.config import pinecone_configured
 
 mcp = MCPServer("erp-knowledge")

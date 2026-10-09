@@ -5,7 +5,7 @@ import json
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
-from erp_copilot import db
+from erp_copilot.data import db
 
 mcp = MCPServer("erp-db")
 

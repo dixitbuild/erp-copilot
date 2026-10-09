@@ -18,7 +18,7 @@ dependencies = [
 
 [project.scripts]
 erp-copilot = "erp_copilot:main"
-erp-ingest = "erp_copilot.ingest:main"
+erp-ingest = "erp_copilot.vector.ingest:main"
 
 [build-system]
 requires = ["uv_build>=0.12.19,<0.13.0"]

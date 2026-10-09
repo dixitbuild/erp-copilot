@@ -1,6 +1,6 @@
 """Load the markdown files in knowledge/ into Pinecone. Safe to re-run (records are upserted)."""
 
-from erp_copilot import vector_store
+from erp_copilot.vector import store as vector_store
 from erp_copilot.config import pinecone_configured
 
 

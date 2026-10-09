@@ -5,7 +5,7 @@ from typing import Any
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from erp_copilot.db import DEFAULT_ALLOWED_TABLES
+from erp_copilot.data.db import DEFAULT_ALLOWED_TABLES
 
 
 class McpToolbox:

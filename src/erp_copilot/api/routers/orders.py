@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from erp_copilot.dummy_data import PURCHASE_ORDERS, SALES_ORDERS, WORK_ORDERS
-from erp_copilot.schemas import PurchaseOrder, SalesOrder, WorkOrder
+from erp_copilot.data.dummy_data import PURCHASE_ORDERS, SALES_ORDERS, WORK_ORDERS
+from erp_copilot.data.schemas import PurchaseOrder, SalesOrder, WorkOrder
 
 router = APIRouter(tags=["orders"])
 

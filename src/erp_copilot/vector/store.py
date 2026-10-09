@@ -8,7 +8,7 @@ from pinecone import Pinecone
 
 from erp_copilot.config import PineconeSettings
 
-KNOWLEDGE_DIR = Path(__file__).resolve().parents[2] / "knowledge"
+KNOWLEDGE_DIR = Path(__file__).resolve().parents[3] / "knowledge"
 
 
 def chunk_markdown(text: str, source: str) -> list[dict]:
