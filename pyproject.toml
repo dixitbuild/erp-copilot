@@ -23,3 +23,10 @@ erp-ingest = "erp_copilot.vector.ingest:main"
 [build-system]
 requires = ["uv_build>=0.12.19,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+lab = [
+    "langchain>=1.4.4",
+    "langchain-openai>=1.7.0",
+    "langgraph>=1.2.14",
+]
